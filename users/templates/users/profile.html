@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+{%  block scripts %}
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+{% endblock %}
+{% block content %}
+        {% if messages %}
+        <div>
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% include 'header.html' %}
+    <h1>Profile</h1>
+    <p>Hi, {{ request.user }}</p>
+    <p>Email: {{ request.user.email }}</p>
+    <p>First Name: {{ request.user.first_name }}</p>
+    <p>Last Name: {{ request.user.last_name }}</p>
+    <p>Personal Number: {{ request.user.personal_number }}</p>
+
+    <h2>Borrowed Books</h2>
+        <ul>
+            <li><a href="{% url 'books:not_due_books' %}">Borrowed Books Not Due</a></li>
+            <li><a href="{% url 'books:due_books' %}">Borrowed Books Due</a></li>
+            <li><a href="{% url 'books:borrow_history' %}">Borrow History</a></li>
+        </ul>
+
+    <h2>Reserved Books</h2>
+        <ul>
+            <li><a href="{% url 'books:active_reserved_books' %}">Active Reserved Books</a></li>
+            <li><a href="{% url 'books:reserved_books_history' %}">Reserved Books History</a></li>
+        </ul>
+
+    <h2>Update Profile</h2>
+    <ul>
+    <li> <a href="{% url 'users:profile_update' %}">Update Profile</a> </li>
+    <li> <a href="{% url 'users:change_password' %}">Update Password</a> </li>
+        <br>
+    <li> <a href="{% url 'users:logout' %}">Logout</a> </li>
+</ul>
+{%  endblock %}
