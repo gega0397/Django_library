@@ -223,21 +223,23 @@ class BorrowListAPIView(AuthListAPIView):
     pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
-        queryset = Borrow.objects.all().prefetch_related('user', 'book').filter(returned=False)
+        queryset = Borrow.objects.all().prefetch_related('user', 'book')
         if self.request.user.user_type == str(UserTypeChoices.STUDENT):
             queryset = queryset.filter(user=self.request.user)
-        queryset = queryset.order_by('due_date')
-        return queryset
 
+        author_ids = self.request.query_params.getlist('authors')
+        genre_ids = self.request.query_params.getlist('genres')
+        returned = self.request.query_params.get('returned')
 
-class BorrowHistoryListAPIView(AuthListAPIView):
-    serializer_class = BorrowSerializer
-    pagination_class = CustomPageNumberPagination
+        if author_ids:
+            author_ids = [int(author_id) for author_id in author_ids]
+            queryset = queryset.filter(authors__id__in=author_ids)
+        if genre_ids:
+            genre_ids = [int(genre_id) for genre_id in genre_ids]
+            queryset = queryset.filter(genres__id__in=genre_ids)
+        if returned:
+            queryset = queryset.filter(returned=returned)
 
-    def get_queryset(self):
-        queryset = Borrow.objects.all().prefetch_related('user', 'book').filter(returned=True)
-        if self.request.user.user_type == str(UserTypeChoices.STUDENT):
-            queryset = queryset.filter(user=self.request.user)
         queryset = queryset.order_by('due_date')
         return queryset
 
@@ -249,23 +251,23 @@ class ReserveListAPIView(AuthListAPIView):
     ordering = ['-due_date']
 
     def get_queryset(self):
-        queryset = Reserve.objects.all().prefetch_related('user', 'book').filter(status=True)
+        queryset = Reserve.objects.all().prefetch_related('user', 'book')
         if self.request.user.user_type == str(UserTypeChoices.STUDENT):
             queryset = queryset.filter(user=self.request.user)
-        queryset = queryset.order_by('due_date')
-        return queryset
 
+        author_ids = self.request.query_params.getlist('authors')
+        genre_ids = self.request.query_params.getlist('genres')
+        returned = self.request.query_params.get('returned')
 
-class ReserveHistoryListAPIView(AuthListAPIView):
-    serializer_class = ReserveSerializer
-    pagination_class = CustomPageNumberPagination
-    ordering_fields = ['due_date']
-    ordering = ['-due_date']
+        if author_ids:
+            author_ids = [int(author_id) for author_id in author_ids]
+            queryset = queryset.filter(authors__id__in=author_ids)
+        if genre_ids:
+            genre_ids = [int(genre_id) for genre_id in genre_ids]
+            queryset = queryset.filter(genres__id__in=genre_ids)
+        if returned:
+            queryset = queryset.filter(returned=returned)
 
-    def get_queryset(self):
-        queryset = Reserve.objects.all().prefetch_related('user', 'book').filter(status=False)
-        if self.request.user.user_type == str(UserTypeChoices.STUDENT):
-            queryset = queryset.filter(user=self.request.user)
         queryset = queryset.order_by('due_date')
         return queryset
 
