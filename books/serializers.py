@@ -18,6 +18,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
@@ -25,12 +26,22 @@ class GenreSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+class BookSerializerSimple(serializers.ModelSerializer):
+    authors = AuthorSerializer(many=True, required=False)
+    genres = GenreSerializer(many=True, required=False)
+
+    class Meta:
+        model = Book
+        fields = ['authors', 'genres', 'id', 'title', 'release_date', 'stock']
+
+
 class BorrowSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only=True)
+    book = BookSerializerSimple(read_only=True)
 
     class Meta:
         model = Borrow
-        fields = ['id', 'user', 'borrowed_at', 'due_date', 'returned']
+        fields = ['id', 'user', 'book', 'borrowed_at', 'due_date', 'returned']
         depth = 1
 
 
@@ -123,6 +134,7 @@ class GenreDetailsSerializer(serializers.ModelSerializer):
 
 class ReserveSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only=True)
+    book = BookSerializerSimple(read_only=True)
 
     class Meta:
         model = Reserve
