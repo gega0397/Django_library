@@ -1,0 +1,16 @@
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{% url 'books:home' %}">Home</a></li>
+                <li><a href="{% url 'users:profile' %}">Profile</a></li>
+            </ul>
+        </nav>
+        <form action="{% url 'books:search' %}" method="get">
+            {{ form }}
+            <input type="hidden" name="form_type" value="search_form">
+            <button type="submit">Search</button>
+        </form>
+        <br>
+        <button> <a href="{% url 'books:genre-list-generic' %}"> Search By Genres</a> </button>
+    </header>
+ 

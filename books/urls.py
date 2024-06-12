@@ -9,11 +9,9 @@ from books.views.normal_views import (
     HomeView,
     BookSearchView,
     BookDetailView,
-    BorrowedBooksNotDueView,
-    BorrowedBooksDueView,
-    BorrowHistoryView,
-    ActiveReservedBooksView,
-    ReservedBooksHistoryView, GenreListView,
+    FilteredReservedBooksView,
+    GenreListView,
+    FilteredBorrowListView
 )
 from books.views.api_views import (
     BookListAPIView,
@@ -37,7 +35,8 @@ from books.views.api_views import (
     CustomTokenObtainPairView,
     StatisticsTopBookListAPIView,
     StatisticsBookBorrowsListAPIView,
-    StatisticsBookBorrowsLateListAPIView,
+    StatisticsBookBorrowsLateBooksListAPIView,
+    StatisticsBookBorrowsLateUsersListAPIView,
     BorrowDueView, ReserveDueView,
 )
 
@@ -51,11 +50,9 @@ urlpatterns = [
     path('search/', BookSearchView.as_view(), name='search'),
     path('<int:pk>/', BookDetailView.as_view(), name='book_detail'),
     path('genres/', GenreListView.as_view(), name='genre-list-generic'),
-    path('borrowed-books-not-due/', BorrowedBooksNotDueView.as_view(), name='not_due_books'),
-    path('borrowed-books-due/', BorrowedBooksDueView.as_view(), name='due_books'),
-    path('borrow-history/', BorrowHistoryView.as_view(), name='borrow_history'),
-    path('active-reserved-books/', ActiveReservedBooksView.as_view(), name='active_reserved_books'),
-    path('reserved-books-history/', ReservedBooksHistoryView.as_view(), name='reserved_books_history'),
+
+    path('borrow', FilteredBorrowListView.as_view(), name='borrow'),
+    path('reserve', FilteredReservedBooksView.as_view(), name='reserve'),
 
     path('api/books/', BookListAPIView.as_view(), name='book-list'),
     path('api/authors/', AuthorListAPIView.as_view(), name='author-list'),
@@ -80,9 +77,9 @@ urlpatterns = [
     path('api/books/create_batch/', BookBatchCreateView.as_view(), name='book-create-batch'),
 
     path('api/statistics/top-books/', StatisticsTopBookListAPIView.as_view(), name='top-books'),
-    path('api/statistics/top-worst-users/', StatisticsBookBorrowsLateListAPIView.as_view(), name='top-worst-users'),
+    path('api/statistics/top-worst-users/', StatisticsBookBorrowsLateUsersListAPIView.as_view(), name='top-worst-users'),
     path('api/statistics/books_borrows/', StatisticsBookBorrowsListAPIView.as_view(), name='top-books-borrows'),
-    path('api/statistics/late_returns', StatisticsBookBorrowsLateListAPIView.as_view(), name='late-returns'),
+    path('api/statistics/late_returns', StatisticsBookBorrowsLateBooksListAPIView.as_view(), name='late-returns'),
 
     path('api/borrow_due', BorrowDueView.as_view(), name='borrow-due'),
     path('api/reserve_due', ReserveDueView.as_view(), name='reserve-due'),

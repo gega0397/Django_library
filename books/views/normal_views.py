@@ -59,8 +59,8 @@ class BookSearchView(MyListView):
     template_name = 'books/books.html'
 
     def get_queryset(self):
-        query = self.request.GET.get('query')
-        genre_id = self.request.GET.get('genre')
+        query = self.request.GET.get('query', None)
+        genre_id = self.request.GET.get('genre', None)
         queryset = Book.objects.all()
 
         if query:
@@ -120,62 +120,57 @@ class BookDetailView(LoginRequiredMixin, DetailView):
             return redirect('books:book_detail', pk=book.pk)
 
 
-class BorrowedBooksNotDueView(MyListView):
+class FilteredBorrowListView(MyListView):
     model = Borrow
     template_name = 'books/book_list.html'
     context_object_name = 'borrows'
 
-    def get_queryset(self):
-        return Borrow.objects.filter(user=self.request.user, due_date__gte=timezone.now(), returned=False)
+    filter_conditions = {
+        'history': {'returned': True},
+        'not_due': {'due_date__gte': timezone.now(), 'returned': False},
+        'due': {'due_date__lt': timezone.now(), 'returned': False},
+    }
 
-    def get_context_data(self, **kwargs):
-        return self.my_context_data('Home', **kwargs)
-
-
-class BorrowedBooksDueView(MyListView):
-    model = Borrow
-    template_name = 'books/book_list.html'
-    context_object_name = 'borrows'
+    def get_filter_type(self):
+        return self.request.GET.get('filter_type')
 
     def get_queryset(self):
-        return Borrow.objects.filter(user=self.request.user, due_date__lt=timezone.now(), returned=False)
+        queryset = super().get_queryset()
+        queryset = queryset.filter(user=self.request.user)
 
-    def get_context_data(self, **kwargs):
-        return self.my_context_data('Home', **kwargs)
+        filter_type = self.get_filter_type()
+        if filter_type and filter_type in self.filter_conditions:
+            queryset = queryset.filter(**self.filter_conditions[filter_type])
 
-
-class BorrowHistoryView(MyListView):
-    model = Borrow
-    template_name = 'books/book_list.html'
-    context_object_name = 'borrows'
-
-    def get_queryset(self):
-        queryset = Borrow.objects.filter(user_id=self.request.user.pk, returned=True)
         return queryset
 
     def get_context_data(self, **kwargs):
         return self.my_context_data('Home', **kwargs)
 
 
-class ActiveReservedBooksView(MyListView):
+
+class FilteredReservedBooksView(MyListView):
     model = Reserve
     template_name = 'books/book_list.html'
     context_object_name = 'borrows'
 
-    def get_queryset(self):
-        return Reserve.objects.filter(user=self.request.user, status=True)
+    filter_conditions = {
+        'active': {'status': True},
+        'history': {'status': False},
+    }
 
-    def get_context_data(self, **kwargs):
-        return self.my_context_data('Home', **kwargs)
-
-
-class ReservedBooksHistoryView(MyListView):
-    model = Reserve
-    template_name = 'books/book_list.html'
-    context_object_name = 'borrows'
+    def get_filter_type(self):
+        return self.request.GET.get('filter_type')
 
     def get_queryset(self):
-        return Reserve.objects.filter(user=self.request.user, status=False)
+        queryset = super().get_queryset()
+        queryset = queryset.filter(user=self.request.user)
+
+        filter_type = self.get_filter_type()
+        if filter_type and filter_type in self.filter_conditions:
+            queryset = queryset.filter(**self.filter_conditions[filter_type])
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         return self.my_context_data('Home', **kwargs)

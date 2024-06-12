@@ -1,4 +1,5 @@
 from datetime import timedelta
+import json
 
 from django.db import transaction
 from django.db.models import Count, Case, When, IntegerField, F, Q
@@ -11,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+
 
 from Django_final.emailing import email_borrow, email_reserve
 from books.models import Author, Genre, Book, Borrow, Reserve
@@ -137,15 +140,15 @@ class BookListAPIView(AuthListAPIView):
                 )
             )
         )
-        author_ids = self.request.query_params.getlist('authors')
-        genre_ids = self.request.query_params.getlist('genres')
 
-        if author_ids:
-            author_ids = [int(author_id) for author_id in author_ids]
-            queryset = queryset.filter(authors__id__in=author_ids)
-        if genre_ids:
-            genre_ids = [int(genre_id) for genre_id in genre_ids]
-            queryset = queryset.filter(genres__id__in=genre_ids)
+        filters = self.request.query_params.get('filters', None)
+
+        if filters:
+            filters = json.loads(filters)
+            for filter_key, values in filters.items():
+                filter_expression = f"{filter_key}__id__in"
+                values_list = [int(value) for value in values]
+                queryset = queryset.filter(**{filter_expression: values_list})
 
         queryset = queryset.order_by('id')
 
@@ -196,82 +199,6 @@ class GenreDetailAPIView(AtomicRetrieveUpdateAPIView):
     serializer_class = GenreDetailsSerializer
 
 
-class ReserveDetailView(AtomicRetrieveUpdateAPIView):
-    queryset = Reserve.objects.all().order_by('id')
-
-    # permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        if self.request.method in ['PATCH', 'PUT']:
-            return ReserveStatusUpdateSerializer
-        return ReserveSerializer
-
-
-class BorrowDetailView(AtomicRetrieveUpdateAPIView):
-    queryset = Borrow.objects.all()
-
-    # permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        if self.request.method in ['PATCH', 'PUT']:
-            return BorrowStatusUpdateSerializer
-        return BorrowSerializer
-
-
-class BorrowListAPIView(AuthListAPIView):
-    serializer_class = BorrowSerializer
-    pagination_class = CustomPageNumberPagination
-
-    def get_queryset(self):
-        queryset = Borrow.objects.all().prefetch_related('user', 'book')
-        if self.request.user.user_type == str(UserTypeChoices.STUDENT):
-            queryset = queryset.filter(user=self.request.user)
-
-        author_ids = self.request.query_params.getlist('authors')
-        genre_ids = self.request.query_params.getlist('genres')
-        returned = self.request.query_params.get('returned')
-
-        if author_ids:
-            author_ids = [int(author_id) for author_id in author_ids]
-            queryset = queryset.filter(authors__id__in=author_ids)
-        if genre_ids:
-            genre_ids = [int(genre_id) for genre_id in genre_ids]
-            queryset = queryset.filter(genres__id__in=genre_ids)
-        if returned:
-            queryset = queryset.filter(returned=returned)
-
-        queryset = queryset.order_by('due_date')
-        return queryset
-
-
-class ReserveListAPIView(AuthListAPIView):
-    serializer_class = ReserveSerializer
-    pagination_class = CustomPageNumberPagination
-    ordering_fields = ['due_date']
-    ordering = ['-due_date']
-
-    def get_queryset(self):
-        queryset = Reserve.objects.all().prefetch_related('user', 'book')
-        if self.request.user.user_type == str(UserTypeChoices.STUDENT):
-            queryset = queryset.filter(user=self.request.user)
-
-        author_ids = self.request.query_params.getlist('authors')
-        genre_ids = self.request.query_params.getlist('genres')
-        returned = self.request.query_params.get('returned')
-
-        if author_ids:
-            author_ids = [int(author_id) for author_id in author_ids]
-            queryset = queryset.filter(authors__id__in=author_ids)
-        if genre_ids:
-            genre_ids = [int(genre_id) for genre_id in genre_ids]
-            queryset = queryset.filter(genres__id__in=genre_ids)
-        if returned:
-            queryset = queryset.filter(returned=returned)
-
-        queryset = queryset.order_by('due_date')
-        return queryset
-
-
 class BorrowCreateView(AtomicCreateAPIView):
     queryset = Borrow.objects.all()
     serializer_class = BorrowCreateSerializer
@@ -314,6 +241,78 @@ class ReserveCreateView(AtomicCreateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ReserveDetailView(AtomicRetrieveUpdateAPIView):
+    queryset = Reserve.objects.all().order_by('id')
+
+    # permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method in ['PATCH', 'PUT']:
+            return ReserveStatusUpdateSerializer
+        return ReserveSerializer
+
+
+class BorrowDetailView(AtomicRetrieveUpdateAPIView):
+    queryset = Borrow.objects.all()
+
+    # permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method in ['PATCH', 'PUT']:
+            return BorrowStatusUpdateSerializer
+        return BorrowSerializer
+
+
+class BorrowListAPIView(AuthListAPIView):
+    serializer_class = BorrowSerializer
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        queryset = Borrow.objects.all().prefetch_related('user', 'book')
+        if self.request.user.user_type == str(UserTypeChoices.STUDENT):
+            queryset = queryset.filter(user=self.request.user)
+
+        filters = self.request.query_params.get('filters', None)
+
+        if filters:
+            filters = json.loads(filters)
+            for filter_key, values in filters.items():
+                filter_expression = f"{filter_key}__id__in"
+                values_list = [int(value) for value in values]
+                queryset = queryset.filter(**{filter_expression: values_list})
+
+        queryset = queryset.order_by('id')
+
+        queryset = queryset.order_by('due_date')
+        return queryset
+
+
+class ReserveListAPIView(AuthListAPIView):
+    serializer_class = ReserveSerializer
+    pagination_class = CustomPageNumberPagination
+    ordering_fields = ['due_date']
+    ordering = ['-due_date']
+
+    def get_queryset(self):
+        queryset = Reserve.objects.all().prefetch_related('user', 'book')
+        if self.request.user.user_type == str(UserTypeChoices.STUDENT):
+            queryset = queryset.filter(user=self.request.user)
+
+        filters = self.request.query_params.get('filters', None)
+
+        if filters:
+            filters = json.loads(filters)
+            for filter_key, values in filters.items():
+                filter_expression = f"{filter_key}__id__in"
+                values_list = [int(value) for value in values]
+                queryset = queryset.filter(**{filter_expression: values_list})
+
+        queryset = queryset.order_by('id')
+
+        queryset = queryset.order_by('due_date')
+        return queryset
 
 
 class BookSearchView(View):
@@ -362,7 +361,7 @@ class StatisticsBookBorrowsListAPIView(AuthListAPIView):
         return queryset
 
 
-class StatisticsBookBorrowsLateListAPIView(AuthListAPIView):
+class StatisticsBookBorrowsLateBooksListAPIView(AuthListAPIView):
     serializer_class = TopBookSerializer
     pagination_class = CustomPageNumberPagination
 
@@ -381,7 +380,7 @@ class StatisticsBookBorrowsLateListAPIView(AuthListAPIView):
         return queryset
 
 
-class StatisticsBookBorrowsLateListAPIView(AuthListAPIView):
+class StatisticsBookBorrowsLateUsersListAPIView(AuthListAPIView):
     serializer_class = TopWorstUserSerializer
     pagination_class = CustomPageNumberPagination
 
