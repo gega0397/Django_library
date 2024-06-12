@@ -13,7 +13,6 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from Django_final.emailing import email_borrow, email_reserve
-from books.custom_permissions import IsSystemUser
 from books.models import Author, Genre, Book, Borrow, Reserve
 from books.paginators import CustomPageNumberPagination
 from books.serializers import (BookSerializer,
@@ -30,7 +29,7 @@ from books.serializers import (BookSerializer,
                                ReserveCreateSerializer, CustomTokenObtainPairSerializer, TopBookSerializer,
                                TopWorstUserSerializer, CustomBorrowSerializer, CustomReserveSerializer,
                                )
-from books.view_permissions import CreatePermissions
+from books.view_permissions import CreatePermissions, IsSystemUser
 from users.choices import UserTypeChoices
 from users.models import CustomUser
 
