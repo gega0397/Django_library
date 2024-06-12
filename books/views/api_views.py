@@ -471,5 +471,8 @@ class ReserveDueView(APIView):
                 email_reserve(request, data['user']['email'], data['user']['first_name'],
                               request.data[0]['id'],
                               data['book']['title'])
+                reserve = Reserve.objects.get(pk=request.data[0]['id'], status=True)
+                reserve.status = False
+                reserve.save()
             return Response(validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
