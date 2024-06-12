@@ -232,11 +232,14 @@ class BorrowListAPIView(AuthListAPIView):
 
         filters = self.request.query_params.get('filters', None)
         returned = self.request.query_params.get('returned', None)
+        late = self.request.query_params.get('late', None)
 
-        if returned:
-            if returned is not None:
-                returned = json.loads(returned.lower())
-                queryset = queryset.filter(returned=returned)
+        if late and json.loads(late.lower()):
+            queryset = queryset.filter(due_date__lt=F('returned_at'))
+
+        if returned is not None:
+            returned = json.loads(returned.lower())
+            queryset = queryset.filter(returned=returned)
 
         if filters:
             filters = json.loads(filters)
@@ -263,10 +266,10 @@ class ReserveListAPIView(AuthListAPIView):
         filters = self.request.query_params.get('filters', None)
         status = self.request.query_params.get('status')
 
-        if status:
-            if status is not None:
-                status = json.loads(status.lower())
-                queryset = queryset.filter(status=status)
+
+        if status is not None:
+            status = json.loads(status.lower())
+            queryset = queryset.filter(status=status)
 
         if filters:
             filters = json.loads(filters)
