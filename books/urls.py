@@ -39,7 +39,8 @@ from books.views.api_views import (
     CustomTokenObtainPairView,
     StatisticsTopBookListAPIView,
     StatisticsBookBorrowsListAPIView,
-    StatisticsBookBorrowsLateListAPIView
+    StatisticsBookBorrowsLateListAPIView,
+    BorrowDueView, ReserveDueView,
 )
 
 app_name = 'books'
@@ -82,4 +83,6 @@ urlpatterns = [
     path('api/statistics/top-worst-users/', StatisticsBookBorrowsLateListAPIView.as_view(), name='top-worst-users'),
     path('api/statistics/books_borrows/', StatisticsBookBorrowsListAPIView.as_view(), name='top-books-borrows'),
     path('api/statistics/late_returns', StatisticsBookBorrowsLateListAPIView.as_view(), name='late-returns'),
+    path('api/borrow_due', BorrowDueView.as_view(), name='borrow-due'),
+    path('api/reserve_due', ReserveDueView.as_view(), name='reserve-due'),
 ]

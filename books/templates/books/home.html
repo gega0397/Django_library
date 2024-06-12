@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% include 'header.html' %}
+    <h1>Books</h1>
+    {% for book in books %}
+        <div>
+            <ul class="book-list">
+                <li><a href="{% url 'books:book_detail' book.pk %}">{{ book.title }}</a></li>
+            </ul>
+        </div>
+    {% endfor %}
+
+{% if books.has_other_pages %}
+    <h2>Pages</h2>
+    <ul>
+        {% if books.has_previous %}
+            <li><a href="?page=1">First</a></li>
+            <li><a href="?page={{ books.previous_page_number }}">Previous</a></li>
+        {% endif %}
+    
+        
+        {% if prev_pages %}
+            {% for prev_page in prev_pages %}
+                <li><a href="?page={{ prev_page }}">{{ prev_page }}</a></li>
+            {% endfor %}
+        {% endif %}
+        
+        <li class="active"><span>{{ books.number }}</span></li>
+        
+        {% if next_pages %}
+            {% for next_page in next_pages %}
+                <li><a href="?page={{ next_page }}">{{ next_page }}</a></li>
+            {% endfor %}
+        {% endif %}
+        
+        {% if books.has_next %}
+            <li><a href="?page={{ books.next_page_number }}">Next</a></li>
+            <li><a href="?page={{ books.paginator.num_pages }}">Last</a></li>
+        {% endif %}
+    </ul>
+{% endif %}
+{% endblock %}

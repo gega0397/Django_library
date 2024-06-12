@@ -70,7 +70,7 @@ class Borrow(models.Model):
 
 class Reserve(models.Model):
     user = models.ForeignKey(CustomUser, related_name="reserves",
-                             limit_choices_to={'user_type': UserTypeChoices.STUDENT},
+                             limit_choices_to=Q(user_type=UserTypeChoices.STUDENT) | Q(user_type=UserTypeChoices.SYSTEMS),
                              on_delete=models.CASCADE,
                              verbose_name=_('User'))
     book = models.ForeignKey(Book,
@@ -87,6 +87,6 @@ class Reserve(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.due_date = timezone.now() + settings.RESERVE_TIME_LIMIT
-        if self.status:
+        if not self.status:
             self.due_date = timezone.now()
         super().save(*args, **kwargs)

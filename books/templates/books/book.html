@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% include 'header.html' %}
+  <div>
+    <h1>{{ book.title }}</h1>
+    <p>Authors: {{ book.authors.all|join:", " }}</p>
+    <p>Genres: {{ book.genres.all|join:", " }}</p>
+    <p>Release Date: {{ book.release_date }}</p>
+    <p>Stock: {{ book.stock }}</p>
+    <p>Borrows Count: {{ borrows_count }}</p>
+    <p>Reserves Count: {{ reserves_count }}</p>
+    <p>Available to Borrow: {% if available_to_borrow %}Yes{% else %}No{% endif %}</p>
+
+    {% if user_reserved_book %}
+      <p>This book is already reserved by you.</p>
+        <form action="{% url 'books:book_detail' book.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="reserve_cancel_form">
+            <button type="submit">Cancel Reserve</button>
+        </form>
+    {% elif available_to_borrow %}
+        <form action="{% url 'books:book_detail' book.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="reserve_form">
+            <button type="submit">Reserve</button>
+        </form>
+    {% else %}
+      <p>This book is not available for borrowing.</p>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -58,7 +58,7 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ['id', 'title', 'release_date', 'stock', 'available_to_borrow']
+        fields = ['authors', 'genres', 'id', 'title', 'release_date', 'stock', 'available_to_borrow']
 
     def get_available_to_borrow(self, obj):
         # print(obj.stock, obj.borrows_count)
@@ -165,3 +165,23 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Use 'email' instead of 'username'
         attrs['username'] = attrs.get('email')
         return super().validate(attrs)
+
+
+class CustomBorrowSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email')
+    user_name = serializers.CharField(source='user.first_name')
+    book_title = serializers.CharField(source='book.title')
+
+    class Meta:
+        model = Borrow
+        fields = ['user_email', 'user_name', 'book_title', 'due_date']
+
+
+class CustomReserveSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email')
+    user_name = serializers.CharField(source='user.first_name')
+    book_title = serializers.CharField(source='book.title')
+
+    class Meta:
+        model = Reserve
+        fields = ['user_email', 'user_name', 'book_title', 'due_date', 'status', 'id']

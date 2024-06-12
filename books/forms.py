@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 from django.utils import timezone
 
-from books.models import Borrow
+from books.models import Borrow, Reserve
 
 
 class BookForm(forms.Form):
@@ -20,4 +20,17 @@ class BorrowAdminForm(forms.ModelForm):
         due_date = cleaned_data.get("due_date")
         if not due_date:
             cleaned_data["due_date"] = timezone.now() + settings.BORROW_TIME_LIMIT
+        return cleaned_data
+
+
+class ReserveAdminForm(forms.ModelForm):
+    class Meta:
+        model = Reserve
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        due_date = cleaned_data.get("due_date")
+        if not due_date:
+            cleaned_data["due_date"] = timezone.now() + settings.RESERVE_TIME_LIMIT
         return cleaned_data

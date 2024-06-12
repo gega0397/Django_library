@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .forms import BorrowAdminForm
+from .forms import BorrowAdminForm, ReserveAdminForm
 from .models import Author, Genre, Book, Borrow, Reserve
 
 @admin.register(Author)
@@ -31,6 +31,7 @@ class BorrowAdmin(admin.ModelAdmin):
 
 @admin.register(Reserve)
 class ReserveAdmin(admin.ModelAdmin):
+    form = ReserveAdminForm
     list_display = ['user', 'book', 'borrowed_at', 'status']
     list_filter = ['status']
     search_fields = ['user__email', 'book__title']
