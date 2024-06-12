@@ -116,7 +116,7 @@ class BookDetailView(LoginRequiredMixin, DetailView):
             reserve = Reserve.objects.get(user=request.user, book=book, status=True)
             reserve.status = False
             reserve.save()
-            email(request)
+            #email(request)
             return redirect('books:book_detail', pk=book.pk)
 
 
