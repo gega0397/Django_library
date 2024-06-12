@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.views.generic import ListView, DetailView
 
 from Django_final.emailing import email
-from books.forms import BookForm
+from books.forms import BookForm, GenreForm
 from books.models import Book, Reserve, Borrow, Genre
 from books.paginators import CustomPageNumberPagination
 
@@ -175,13 +175,25 @@ class FilteredReservedBooksView(MyListView):
     def get_context_data(self, **kwargs):
         return self.my_context_data('Home', **kwargs)
 
-class GenreListView(ListView):
+class GenreListView(MyListView):
     model = Genre
     template_name = 'books/genres.html'
     context_object_name = 'genres'
     paginate_by = settings.PAGE_PAGINATION_VIEW_COUNT
 
-    def get_context_data(self, **kwargs):
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('query')
+        if query:
+            queryset = queryset.filter(name__icontains=query)
+        return queryset
+
+    def my_context_data(self, title, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Genres'
-        return context
+        context['query'] = self.request.GET.get('query', '')
+
+        return super().my_context_data(title, **kwargs)
+    def get_context_data(self, **kwargs):
+        return self.my_context_data('Genres', **kwargs)
+

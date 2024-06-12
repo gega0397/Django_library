@@ -10,6 +10,11 @@ class BookForm(forms.Form):
                             required=False,
                             widget=forms.TextInput(attrs={'placeholder': 'Search books...'}))
 
+class GenreForm(forms.Form):
+    genre = forms.CharField(label='Search genres',
+                            required=False,
+                            widget=forms.TextInput(attrs={'placeholder': 'Search genres...'}))
+
 class BorrowAdminForm(forms.ModelForm):
     class Meta:
         model = Borrow

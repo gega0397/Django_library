@@ -96,7 +96,7 @@ class AuthorBatchCreateView(AtomicCreateAPIView):
 class GenreBatchCreateView(AtomicCreateAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [permissions.AllowAny]
+
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
@@ -108,7 +108,6 @@ class GenreBatchCreateView(AtomicCreateAPIView):
 class BookBatchCreateView(AtomicCreateAPIView):
     queryset = Book.objects.all()
     serializer_class = CreateBookSerializer
-    permission_classes = [permissions.AllowAny]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))

@@ -20,7 +20,7 @@ class Author(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=10)
+    name = models.CharField(max_length=25)
 
     def __str__(self):
         return self.name

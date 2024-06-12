@@ -49,7 +49,7 @@ urlpatterns = [
     path('', HomeView.as_view(), name='home'),
     path('search/', BookSearchView.as_view(), name='search'),
     path('<int:pk>/', BookDetailView.as_view(), name='book_detail'),
-    path('genres/', GenreListView.as_view(), name='genre-list-generic'),
+    path('genres/', GenreListView.as_view(), name='genres'),
 
     path('borrow', FilteredBorrowListView.as_view(), name='borrow'),
     path('reserve', FilteredReservedBooksView.as_view(), name='reserve'),

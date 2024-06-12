@@ -4,30 +4,45 @@
 {% block content %}
     {% include 'header.html' %}
     <h1>Genres</h1>
-
+    
+    <form method="GET" action="{% url 'books:genres' %}">
+        <input type="text" name="query" placeholder="Search for genres" value="{{ query }}">
+        <button type="submit">Search</button>
+    </form>
+    
   <ul>
-    {% for genre in genres %}
-      <li><a href="{% url 'books:search' %}?genre={{ genre.id }}">{{ genre.name }}</a></li>
+    {% for book in books %}
+      <li><a href="{% url 'books:search' %}?genre={{ book.id }}">{{ book.name }}</a></li>
     {% endfor %}
   </ul>
 
-  {% if is_paginated %}
-    <div class="pagination">
-      <span class="step-links">
-        {% if page_obj.has_previous %}
-          <a href="?page=1">first</a>
-          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+{% if books.has_other_pages %}
+    <h2>Pages</h2>
+    <ul>
+        {% if books.has_previous %}
+            <li><a href="?page=1">First</a></li>
+            <li><a href="?page={{ books.previous_page_number }}">Previous</a></li>
         {% endif %}
-
-        <span class="current">
-          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}">next</a>
-          <a href="?page={{ page_obj.paginator.num_pages }}">last</a>
+    
+        
+        {% if prev_pages %}
+            {% for prev_page in prev_pages %}
+                <li><a href="?page={{ prev_page }}">{{ prev_page }}</a></li>
+            {% endfor %}
         {% endif %}
-      </span>
-    </div>
-  {% endif %}
+        
+        <li class="active"><span>{{ books.number }}</span></li>
+        
+        {% if next_pages %}
+            {% for next_page in next_pages %}
+                <li><a href="?page={{ next_page }}">{{ next_page }}</a></li>
+            {% endfor %}
+        {% endif %}
+        
+        {% if books.has_next %}
+            <li><a href="?page={{ books.next_page_number }}">Next</a></li>
+            <li><a href="?page={{ books.paginator.num_pages }}">Last</a></li>
+        {% endif %}
+    </ul>
+{% endif %}
 {% endblock %}
