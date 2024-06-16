@@ -11,12 +11,13 @@ class CreatePermissions(permissions.BasePermission):
             return False
 
         allowed_user_types = [
-            UserTypeChoices.ADMIN,
-            UserTypeChoices.LIBRARIAN,
-            UserTypeChoices.SYSTEMS
+            UserTypeChoices.ADMIN.value,
+            UserTypeChoices.LIBRARIAN.value,
+            UserTypeChoices.SYSTEMS.value
         ]
-        return request.user.user_type in allowed_user_types
 
+        return int(request.user.user_type) in allowed_user_types
+2
 
 class CreateUpdateReserveBorrow(permissions.BasePermission):
 

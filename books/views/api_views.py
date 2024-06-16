@@ -16,6 +16,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 from Django_final.emailing import email_borrow, email_reserve
+from books.choices import filter_conditions
 from books.models import Author, Genre, Book, Borrow, Reserve
 from books.paginators import CustomPageNumberPagination
 from books.serializers import (BookSerializer,
@@ -64,7 +65,45 @@ class AtomicRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
 
 
 class AuthListAPIView(generics.ListAPIView):
+    permission_classes = [CreatePermissions]
     authentication_classes = [SessionAuthentication, JWTAuthentication]
+
+    filter_conditions = filter_conditions
+
+    def apply_filters(self, queryset):
+        filters = self.request.query_params.get('filters', '[]')
+        late = self.request.query_params.get('late', None)
+
+        try:
+            filters = json.loads(filters)
+        except json.JSONDecodeError:
+            filters = []
+
+        if late and json.loads(late.lower()):
+            queryset = queryset.filter(due_date__lt=F('returned_at'))
+
+        for filter in filters:
+            field = filter.get('field')
+            value = filter.get('value')
+            sub_field = filter.get('sub_field', '')
+            condition = filter.get('condition', 'exact')
+            condition = self.filter_conditions.get(condition, '__exact')
+
+            if not field or value is None:
+                continue
+
+            if isinstance(value, str) and value.lower() in ['true', 'false']:
+                value = value.lower() == 'true'
+
+            if sub_field:
+                filter_expression = f"{field}__{sub_field}{condition}"
+            else:
+                filter_expression = f"{field}{condition}"
+
+            queryset = queryset.filter(**{filter_expression: value})
+
+        queryset = queryset.order_by('id')
+        return queryset
 
 
 class AuthorCreateView(AtomicCreateAPIView):
@@ -124,7 +163,8 @@ class BookListAPIView(AuthListAPIView):
         queryset = Book.objects.prefetch_related(
             'authors',
             'genres',
-            'borrows'
+            'borrows',
+            'reserves'
         ).annotate(
             borrows_count=Count(
                 Case(
@@ -140,17 +180,8 @@ class BookListAPIView(AuthListAPIView):
             )
         )
 
-        filters = self.request.query_params.get('filters', None)
-
-        if filters:
-            filters = json.loads(filters)
-            for filter_key, values in filters.items():
-                filter_expression = f"{filter_key}__id__in"
-                values_list = [int(value) for value in values]
-                queryset = queryset.filter(**{filter_expression: values_list})
-
-        queryset = queryset.order_by('id')
-
+        queryset = self.apply_filters(queryset)
+        queryset.order_by('id')
         return queryset
 
 
@@ -158,7 +189,8 @@ class BookDetailsAPIView(AtomicRetrieveUpdateAPIView):
     queryset = Book.objects.prefetch_related(
         'authors',
         'genres',
-        'borrows'
+        'borrows',
+        'reserves'
     ).annotate(
         borrows_count=Count(
             Case(
@@ -201,8 +233,6 @@ class GenreDetailAPIView(AtomicRetrieveUpdateAPIView):
 class ReserveDetailView(AtomicRetrieveUpdateAPIView):
     queryset = Reserve.objects.all().order_by('id')
 
-    # permission_classes = [IsAuthenticated]
-
     def get_serializer_class(self):
         if self.request.method in ['PATCH', 'PUT']:
             return ReserveStatusUpdateSerializer
@@ -211,8 +241,6 @@ class ReserveDetailView(AtomicRetrieveUpdateAPIView):
 
 class BorrowDetailView(AtomicRetrieveUpdateAPIView):
     queryset = Borrow.objects.all()
-
-    # permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.request.method in ['PATCH', 'PUT']:
@@ -229,23 +257,7 @@ class BorrowListAPIView(AuthListAPIView):
         if self.request.user.user_type == str(UserTypeChoices.STUDENT):
             queryset = queryset.filter(user=self.request.user)
 
-        filters = self.request.query_params.get('filters', None)
-        returned = self.request.query_params.get('returned', None)
-        late = self.request.query_params.get('late', None)
-
-        if late and json.loads(late.lower()):
-            queryset = queryset.filter(due_date__lt=F('returned_at'))
-
-        if returned is not None:
-            returned = json.loads(returned.lower())
-            queryset = queryset.filter(returned=returned)
-
-        if filters:
-            filters = json.loads(filters)
-            for filter_key, values in filters.items():
-                filter_expression = f"{filter_key}__id__in"
-                values_list = [int(value) for value in values]
-                queryset = queryset.filter(**{filter_expression: values_list})
+        queryset = self.apply_filters(queryset)
 
         queryset = queryset.order_by('due_date')
         return queryset
@@ -262,20 +274,7 @@ class ReserveListAPIView(AuthListAPIView):
         if self.request.user.user_type == str(UserTypeChoices.STUDENT):
             queryset = queryset.filter(user=self.request.user)
 
-        filters = self.request.query_params.get('filters', None)
-        status = self.request.query_params.get('status')
-
-
-        if status is not None:
-            status = json.loads(status.lower())
-            queryset = queryset.filter(status=status)
-
-        if filters:
-            filters = json.loads(filters)
-            for filter_key, values in filters.items():
-                filter_expression = f"{filter_key}__id__in"
-                values_list = [int(value) for value in values]
-                queryset = queryset.filter(**{filter_expression: values_list})
+        queryset = self.apply_filters(queryset)
 
         queryset = queryset.order_by('due_date')
         return queryset
@@ -309,9 +308,6 @@ class ReserveCreateView(AtomicCreateAPIView):
     def create(self, request, *args, **kwargs):
         user = request.data.get('user')
         book = request.data.get('book')
-        if user != str(request.user.id):
-            return Response({"error": "can only reserve for yourself."},
-                            status=status.HTTP_400_BAD_REQUEST)
 
         active_reserve = Reserve.objects.filter(user=user, book=book, status=True).first()
 

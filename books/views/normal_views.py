@@ -123,7 +123,7 @@ class BookDetailView(LoginRequiredMixin, DetailView):
 class FilteredBorrowListView(MyListView):
     model = Borrow
     template_name = 'books/book_list.html'
-    context_object_name = 'borrows'
+    #context_object_name = 'borrows'
 
     filter_conditions = {
         'history': {'returned': True},
@@ -152,7 +152,7 @@ class FilteredBorrowListView(MyListView):
 class FilteredReservedBooksView(MyListView):
     model = Reserve
     template_name = 'books/book_list.html'
-    context_object_name = 'borrows'
+    #context_object_name = 'borrows'
 
     filter_conditions = {
         'active': {'status': True},

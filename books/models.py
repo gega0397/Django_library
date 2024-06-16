@@ -13,7 +13,7 @@ class Author(models.Model):
     birth_date = models.DateField(verbose_name=_('Birth Date'), blank=True, null=True)
 
     def __str__(self):
-        return self.name + ' ' + self.surname
+        return self.name + ' ' + self.surname if self.surname else self.name
 
     class Meta:
         ordering = ['name']
